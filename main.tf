@@ -91,19 +91,24 @@ resource "aws_instance" "jenkins" {
     tags = {
         Name = "Jenkins-CI-Server"
     }
-
+# user_data 양식 맞춰서 작성 필요
+# 맞추지 않을 경우 jenkins가 설치 및 실행 안됨
     user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y docker
-    service docker start
-    usermod -aG docker ec2-user
-    amazon-linux-extras install epel -y
-    yum install -y java-11-openjdk
-    wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-    rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-    yum install -y jenkins
-    systemctl enable jenkins
-    systemctl start jenkins
-    EOF
+              #!/bin/bash
+              yum update -y
+              amazon-linux-extras install epel -y
+              yum install -y java-11-openjdk docker wget
+              systemctl start docker
+              usermod -aG docker ec2-user
+
+              wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+              rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+              yum install -y jenkins
+              systemctl daemon-reexec
+              systemctl enable jenkins
+              systemctl start jenkins
+              EOF
+
 }
+
