@@ -81,6 +81,7 @@ resource "aws_security_group" "jenkins_sg" {
 
 # Jenkins EC2 in Public Subnet
 resource "aws_instance" "jenkins" {
+    count = var.create_jenkins_instance ? 1 : 0
     ami = data.aws_ssm_parameter.amazon_linux_2.value
     instance_type = var.instance_type
     subnet_id = aws_subnet.public.id
@@ -98,6 +99,8 @@ resource "aws_instance" "jenkins" {
               yum update -y
               amazon-linux-extras install epel -y
               yum install -y java-11-openjdk docker wget
+
+              systemctl enable docker
               systemctl start docker
               usermod -aG docker ec2-user
 

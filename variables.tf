@@ -18,6 +18,12 @@ variable "availability_zone" {
     default = "ap-northeast-2c"
 }
 
+variable "create_jenkins_instance" {
+    description = "jenkins EC2 인스턴스 생성 여부"
+    type = bool
+    default = false
+}
+
 variable "instance_type" {
     default = "t3.medium"
 }
