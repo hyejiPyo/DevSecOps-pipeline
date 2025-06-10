@@ -17,3 +17,11 @@ data "aws_instance" "jenkins" {
   }
 
 }
+
+# 기존 VPC 참조
+data "aws_vpc" "selected" {
+  filter {
+    name = "tag:Name"
+    values = [""]
+  }
+}
