@@ -65,7 +65,7 @@ resource "aws_route_table_association" "public_assoc" {
     route_table_id = aws_route_table.public.id
 }
 
-# Security Group for Jenkins EC2
+# Security Group for Jenkins EC2 (퍼블릭)
 resource "aws_security_group" "jenkins_sg" {
     name = "jenkins-sg"
     description = "Allow SSH and HTTP"
@@ -83,6 +83,42 @@ resource "aws_security_group" "jenkins_sg" {
         to_port = 8080
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    # 빌드 에이전트가 연결 가능하도록 Jenkins agent 포트 허용
+    ingress {
+        from_port = 50000
+        to_port = 50000
+        protocol="tcp"
+        cidr_blocks = [aws_subnet.private.cidr_block]
+    }
+
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+# Security Group for Build Agent EC2 (private)
+resource "aws_security_group" "build_agent_sg" {
+    name = "build-agent-sg"
+    description = "Allow SSH and Jenkins agent port from Jenkins server"
+    vpc_id = aws_vpc.main.id
+
+    ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        security_groups = [aws_security_group.jenkins_sg.id]  # Jenkins 서버에서 SSH 허용
+    }
+
+    ingress {
+        from_port = 50000
+        to_port = 50000
+        protocol = "tcp"
+        security_groups = [aws_security_group.jenkins_sg.id]  # Jenkins agent 통신 허용
     }
 
     egress {
@@ -112,7 +148,7 @@ resource "aws_instance" "jenkins" {
               #!/bin/bash
               yum update -y
               amazon-linux-extras install epel -y
-              yum install -y java-11-openjdk docker wget
+              yum install -y java docker wget
 
               systemctl enable docker
               systemctl start docker
@@ -129,4 +165,30 @@ resource "aws_instance" "jenkins" {
 
 }
 
+# Build Agent EC2 instance (프라이빗 서브넷)
+resource "aws_instance" "build_agent" {
+    ami = data.aws_ssm_parameter.amazon_linux_2.value
+    instance_type = var.instance_type
+    subnet_id = aws_subnet.private.id
+    vpc_security_group_ids = [aws_security_group.build_agent_sg.id]
+    associate_public_ip_address = false
+    key_name = var.key_name
+
+    tags = {
+        Name = "Jenkins-Build-Agent"
+    }
+
+    user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              amazon-linux-extras install epel -y
+              yum install -y java docker
+
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ec2-user
+
+              # Jenkins agent 설치 및 설정 스크립트 작성 필요
+              EOF
+}
 
