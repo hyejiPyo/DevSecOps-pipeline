@@ -13,7 +13,7 @@ data "aws_instance" "jenkins" {
 
   filter {
     name = "instance-state-name"
-    values = ["running", "pening"]
+    values = ["running", "pending"]
   }
 
 }
@@ -22,6 +22,6 @@ data "aws_instance" "jenkins" {
 data "aws_vpc" "selected" {
   filter {
     name = "tag:Name"
-    values = [""]
+    values = ["Jenkins-CI-Server"]
   }
 }
