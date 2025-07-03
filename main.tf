@@ -93,7 +93,6 @@ resource "aws_security_group" "jenkins_sg" {
     }
 }
 
-
 # Jenkins EC2 in Public Subnet
 resource "aws_instance" "jenkins" {
     count = var.create_jenkins_instance ? 1 : 0
