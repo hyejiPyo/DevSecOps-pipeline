@@ -3,8 +3,12 @@ data "aws_ssm_parameter" "amazon_linux_2" {
 }
 
 # jenkins 기존 인스턴스가 있을 경우 참조
+locals {
+  use_existing_jenkins = !var.create_jenkins_instance
+}
+
 data "aws_instance" "jenkins" {
-  count = var.create_jenkins_instance ? 0 : 1
+  count = var.create_jenkins_instance ? 1 : 0
 
   filter {
     name = "tag:Name"
@@ -20,8 +24,5 @@ data "aws_instance" "jenkins" {
 
 # 기존 VPC 참조
 data "aws_vpc" "selected" {
-  filter {
-    name = "tag:Name"
-    values = ["cicd-vpc"]
-  }
+  id = "vpc-01042fc1142ff87a9"
 }
