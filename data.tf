@@ -15,6 +15,8 @@ data "aws_instance" "jenkins_existing" {
     name = "instance-state-name"
     values = ["running", "pending", "stopped"]
   }
+
+  most_recent = true
 }
 
 # 기존 VPC 참조
