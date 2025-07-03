@@ -22,6 +22,6 @@ data "aws_instance" "jenkins" {
 data "aws_vpc" "selected" {
   filter {
     name = "tag:Name"
-    values = ["Jenkins-CI-Server"]
+    values = ["cicd-vpc"]
   }
 }
