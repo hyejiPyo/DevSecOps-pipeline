@@ -9,7 +9,7 @@ locals {
 
 # Jenkins EC2 in Public Subnet
 resource "aws_instance" "jenkins" {
-    count = var.create_jenkins_instance ? 0 : 1
+    count = var.create_jenkins_instance ? 1 : 0
     ami = data.aws_ssm_parameter.amazon_linux_2.value
     instance_type = var.instance_type
     subnet_id = aws_subnet.public.id
