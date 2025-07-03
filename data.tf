@@ -16,7 +16,6 @@ data "aws_instance" "jenkins_existing" {
     values = ["running","pending","stopped"]
   }
 
-  most_recent = true
 }
 
 # 기존 VPC 참조
