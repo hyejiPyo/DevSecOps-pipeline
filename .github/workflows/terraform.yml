@@ -48,7 +48,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
       - name: Create Trivy report directory
-        run: mmkdir -p report
+        run: mkdir -p report
 
       - name: Run SCA (e.g., Trivy)
         uses: aquasecurity/trivy-action@master
