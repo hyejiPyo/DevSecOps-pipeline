@@ -47,3 +47,35 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
+      - name: Run SCA (e.g., Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: CRITICAL, HIGH
+          exit-code: 1
+          format: table
+          output: trivy-results.txt
+
+      - name: Generate SBOM
+        run: |
+          curl -sSL https://github.com/CycloneDX/cyclonedx-cli/releases/latest/download/cyclonedx-linux-x64 -o cyclonedx
+          chmod +x cyclonedx
+          ./cyclonedx --version
+          ./cyclonedx sbom --output sbom.json --input . --type application 
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
+  build:
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Your Build Step Here
+        run: echo "Build Passed"
+
