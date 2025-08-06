@@ -61,7 +61,7 @@ jobs:
           scan-ref: .
           ignore-unfixed: false
           vuln-type: os,library
-          cache-dir: /Users/pyohyeji/Downloads/DevSecOps-pipeline/.cache/trivy
+          cache-dir: ./.cache/trivy
           list-all-pkgs: false
           version: v0.64.1
           cache: true
