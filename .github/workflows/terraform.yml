@@ -47,6 +47,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
+      - name: Create Trivy report directory
+        run: mmkdir -p report
+
       - name: Run SCA (e.g., Trivy)
         uses: aquasecurity/trivy-action@master
         with:
@@ -55,6 +58,14 @@ jobs:
           exit-code: 1
           format: table
           output: ./report/trivy-results.txt
+          scan-ref: .
+          ignore-unfixed: false
+          vuln-type: os,library
+          cache-dir: /Users/pyohyeji/Downloads/DevSecOps-pipeline/.cache/trivy
+          list-all-pkgs: false
+          version: v0.64.1
+          cache: true
+          skip-setup-trivy: false
 
       - name: Upload Trivy Scan Results
         uses: actions/upload-artifact@v4
