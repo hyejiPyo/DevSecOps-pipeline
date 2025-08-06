@@ -67,6 +67,7 @@ jobs:
           cache: true
           skip-setup-trivy: false
 
+          # cache dir 내용 수정
       - name: Upload Trivy Scan Results
         uses: actions/upload-artifact@v4
         with:
