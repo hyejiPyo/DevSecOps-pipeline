@@ -16,7 +16,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Init, Plan and Apply
+    name: Terraform Init, Security Scan, Plan and Apply
     runs-on: ubuntu-latest
 
     env:
@@ -34,6 +34,21 @@ jobs:
         with:
           terraform_version: 1.10.5
 
+    # 배포 전 Terraform 코드 취약점 분석(tfsec 사용)
+      - name: Terraform Static Security Scan (tfsec)
+        uses: aquasecurity/tfsec-action@v1.0.3
+
+    # Trivy Config로 IaC 보안 점검
+      - name: Terraform Static Security Scan(Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: CRITICAL, HIGH
+          format : table
+          output: ./report/terraform-config-scan.txt
+
+
       - name: Terraform Init
         run: terraform init -input=false
 
@@ -50,14 +65,15 @@ jobs:
       - name: Create Trivy report directory
         run: mkdir -p report
 
-      - name: Run SCA (e.g., Trivy)
+      # Trivy FS 스캔 (라이브러리/OS 취약점)
+      - name: Run SCA (Trivy FS Scan)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           severity: CRITICAL,HIGH
           exit-code: 1
-          format: table
-          output: ./report/trivy-results.txt
+          format: json
+          output: report/trivy-results.json
           scan-ref: .
           ignore-unfixed: false
           vuln-type: os,library
@@ -67,24 +83,25 @@ jobs:
           cache: true
           skip-setup-trivy: false
 
-          # cache dir 내용 수정
-      - name: Upload Trivy Scan Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-results
-          path: ./report/trivy-results.txt
-
+        # SBOM 생성
       - name: Generate CycloneDX SBOM with Syft
         uses: anchore/sbom-action@v0.15.4
         with:
           format: cyclonedx-json
-          output-file: sbom.json
+          output-file: report/sbom.json
 
-      - name: Upload SBOM
+        # 결과물 zip으로 묶기
+      - name: Archive all security reports
+        run: |
+          cd report
+          zip -r ../security_reports.zip .
+
+        # 하나의 artifact로 업로드
+      - name: Upload all security reports artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom
-          path: sbom.json
+          name: secuirty-reports
+          path: security_reports.zip
 
   build:
     needs: terraform
