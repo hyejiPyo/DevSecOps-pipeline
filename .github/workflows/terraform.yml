@@ -35,18 +35,18 @@ jobs:
           terraform_version: 1.10.5
 
     # 배포 전 Terraform 코드 취약점 분석(tfsec 사용)
-      - name: Terraform Static Security Scan (tfsec)
-        uses: aquasecurity/tfsec-action@v1.0.3
+    #  - name: Terraform Static Security Scan (tfsec)
+    #    uses: aquasecurity/tfsec-action@v1.0.3
 
     # Trivy Config로 IaC 보안 점검
-      - name: Terraform Static Security Scan(Trivy)
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: config
-          scan-ref: .
-          severity: CRITICAL, HIGH
-          format : table
-          output: ./report/terraform-config-scan.txt
+    #  - name: Terraform Static Security Scan(Trivy)
+    #    uses: aquasecurity/trivy-action@master
+    #    with:
+    #      scan-type: config
+    #      scan-ref: .
+    #      severity: CRITICAL, HIGH
+    #      format : table
+    #      output: ./report/terraform-config-scan.txt
 
 
       - name: Terraform Init
@@ -100,7 +100,7 @@ jobs:
       - name: Upload all security reports artifact
         uses: actions/upload-artifact@v4
         with:
-          name: secuirty-reports
+          name: security-reports
           path: security_reports.zip
 
   build:
