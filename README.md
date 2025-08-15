@@ -1,5 +1,36 @@
-# DevSecOps-pipeline  
-main.tf user_data 수정 - 06.03 19:44  
-
-기존에 생성한 vpc, subnet 등이 있을 경우에는  
-기존에 생성한 걸 사용하도록 코드 수정 필요
+# DevOps-pipeline  
+                              +------------------------+
+                              |      GitHub Repo       |
+                              +-----------+------------+
+                                          |
+                                  Push / PR / Merge
+                                          |
+                              +-----------v------------+
+                              |      GitHub Actions     |
+                              |   - Terraform 실행      |
+                              |   - Jenkins Job 트리거   |
+                              +-----------+------------+
+                                          |
+                            ┌─────────────v──────────────┐
+                            │        AWS VPC (Infra)     │
+                            │                             │
+          +-----------------+----------------+   +--------+-----------+
+          |  Public Subnet (CI/CD)           |   | Private Subnet     |
+          |                                  |   | (App Servers)       |
++---------------------+       +----------------------+    +---------------------+
+| EC2: Jenkins Master | <---> | EC2: Jenkins Agent   |    | EC2: App Server     |
+| - Port 8080         |       | - Docker Build       |    | - docker pull/run   |
++---------------------+       | - Unit/Integration Test|  | - app container     |
+                              +----------------------+    +---------------------+
+                                         |
+                                         | Docker 이미지 Push
+                                         v
+                              +------------------------+
+                              |      AWS ECR           |
+                              | - 이미지 저장소        |
+                              +------------------------+
+                                         |
+                          +--------------v------------------+
+                          |   Prometheus + Node Exporter    |
+                          | - Jenkins/Agent/App 상태 모니터링 |
+                          +----------------------------------+
