@@ -23,13 +23,23 @@ resource "aws_subnet" "public" {
     }
 }
 
-# Private Subnet
-resource "aws_subnet" "private" {
+# Private Subnet for Test
+resource "aws_subnet" "private_test" {
     vpc_id = aws_vpc.main.id
-    cidr_block = var.private_subnet_cidr
+    cidr_block = var.private_subnet_test_cidr
     availability_zone = var.availability_zone
     tags = {
-        Name = "Jenkins-CI-Private-Subnet"
+        Name = "Jenkins-CI-Private-Test-Subnet"
+    }
+}
+
+# Private Subnet for Production
+resource "aws_subnet" "private_prod" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.private_subnet_prod_cidr
+    availability_zone = var.availability_zone
+    tags = {
+        Name = "Jenkins-CI-Private-Prod-Subnet"
     }
 }
 
@@ -192,3 +202,46 @@ resource "aws_instance" "build_agent" {
               EOF
 }
 
+resource "aws_instance" "prometheus" {
+    ami = data.aws_ssm_parameter.amazon_linux_2.value
+    instance_type = var.instance_type
+    subnet_id = aws_subnet.private_test.id
+    vpc_security_group_ids = [aws_security_group.prometheus_sg.id]
+    associate_public_ip_address = false
+    key_name = var.key_name
+
+    tags = {
+        Name = "Prometheus-Server"
+    }
+
+    user_data = <<-EOF
+        #!/bin/bash
+        yum update -y
+        wget https://github.com/prometheus/prometheus/releases/download/v2.52.0/prometheus-2.52.0.linux-amd64.tar.gz
+        tar xvf prometheus-2.52.0.linux-amd64.tar.gz
+        mv prometheus-2.52.0.linux-amd64 /opt/prometheus
+        useradd --no-create-home --shell /bin/false prometheus
+        chown -R prometheus:prometheus /opt/prometheus
+        # Prometheus 실행 스크립트 추가 필요
+    EOF
+}
+
+resource "aws_security_group" "prometheus_sg" {
+    name = "prometheus-sg"
+    description = "Prometheus monitoring server SG"
+    vpc_id = aws_vpc.main.id
+
+    ingress {
+        from_port = 9090
+        to_port = 9090
+        protocol = "tcp"
+        cidr_blocks = ["10.0.0.0/16"]
+    }
+
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_block = ["0.0.0.0/0"]
+    }
+}
